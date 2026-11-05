@@ -89,6 +89,7 @@ function init(cfg) {
         </div>
         <div class="body">${esc(r.number)} ${r.duration ? '· ' + esc(r.duration) + ' сония' : ''}</div>
       </div>`).join('');
+        document.getElementById('status').textContent = 'Қўнғироқлар сони: ' + rows.length;
     document.getElementById('calls').innerHTML = html || '<div class="item">Ҳозирча маълумот йўқ</div>';
   });
 
