@@ -22,12 +22,8 @@
 <body>
 
 <div class="setup" id="setupBox">
-  <div>Firebase созламалари (Firebase консолидан "Project settings → Config" дан олинади):</div>
-  <input id="apiKey" placeholder="apiKey" />
-  <input id="authDomain" placeholder="authDomain" />
-  <input id="databaseURL" placeholder="databaseURL" />
-  <input id="projectId" placeholder="projectId" />
-  <input id="appId" placeholder="appId" />
+  <div>Firebase databaseURL'ни киритинг (бошқа қийматлар керак эмас):</div>
+  <input id="databaseURL" placeholder="https://aniq-a29bf-default-rtdb.asia-southeast1.firebasedatabase.app" />
   <button onclick="saveConfigAndStart()">Сақлаш ва бошлаш</button>
 </div>
 
@@ -37,25 +33,11 @@
 <h2>СМС хабарлар</h2>
 <div id="sms"></div>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script>
 function esc(s) {
   const d = document.createElement('div');
   d.textContent = String(s ?? '');
   return d.innerHTML;
-}
-
-function saveConfigAndStart() {
-  const cfg = {
-    apiKey: document.getElementById('apiKey').value.trim(),
-    authDomain: document.getElementById('authDomain').value.trim(),
-    databaseURL: document.getElementById('databaseURL').value.trim(),
-    projectId: document.getElementById('projectId').value.trim(),
-    appId: document.getElementById('appId').value.trim(),
-  };
-  localStorage.setItem('kuzatuv_config', JSON.stringify(cfg));
-  init(cfg);
 }
 
 function fmtDate(ts) {
@@ -70,18 +52,26 @@ function typeLabel(t) {
   return t;
 }
 
-function init(cfg) {
-  document.getElementById('setupBox').style.display = 'none';
-  document.getElementById('status').textContent = 'Уланди. Маълумот реал вақтда кўрсатилади.';
+function saveConfigAndStart() {
+  const url = document.getElementById('databaseURL').value.trim();
+  localStorage.setItem('kuzatuv_db_url', url);
+  start(url);
+}
 
-  firebase.initializeApp(cfg);
-  const db = firebase.database();
+async function fetchPath(baseUrl, path) {
+  const res = await fetch(baseUrl.replace(/\/$/, '') + '/' + path + '.json?ts=' + Date.now());
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  if (!data) return [];
+  return Object.values(data);
+}
 
-  db.ref('calls').limitToLast(100).on('value', (snap) => {
-    const rows = [];
-    snap.forEach((child) => rows.push(child.val()));
-    rows.sort((a, b) => b.timestamp - a.timestamp);
-    const html = rows.map(r => `
+async function refresh(baseUrl) {
+  try {
+    const calls = await fetchPath(baseUrl, 'calls');
+    calls.sort((a, b) => b.timestamp - a.timestamp);
+    document.getElementById('status').textContent = 'Янгиланди: ' + new Date().toLocaleTimeString('uz-UZ') + ' (қўнғироқлар: ' + calls.length + ')';
+    const callsHtml = calls.map(r => `
       <div class="item">
         <div class="top">
           <span class="${esc(r.type)}">${esc(typeLabel(r.type))}</span>
@@ -89,34 +79,31 @@ function init(cfg) {
         </div>
         <div class="body">${esc(r.number)} ${r.duration ? '· ' + esc(r.duration) + ' сония' : ''}</div>
       </div>`).join('');
-        document.getElementById('status').textContent = 'Қўнғироқлар сони: ' + rows.length;
-    document.getElementById('calls').innerHTML = html || '<div class="item">Ҳозирча маълумот йўқ</div>';
-  });
+    document.getElementById('calls').innerHTML = callsHtml || '<div class="item">Ҳозирча маълумот йўқ</div>';
 
-  db.ref('sms').limitToLast(100).on('value', (snap) => {
-    const rows = [];
-    snap.forEach((child) => rows.push(child.val()));
-    rows.sort((a, b) => b.timestamp - a.timestamp);
-    const html = rows.map(r => `
+    const sms = await fetchPath(baseUrl, 'sms');
+    sms.sort((a, b) => b.timestamp - a.timestamp);
+    const smsHtml = sms.map(r => `
       <div class="item">
         <div class="top"><span>${esc(r.sender)}</span><span>${esc(fmtDate(r.timestamp))}</span></div>
         <div class="body">${esc(r.body)}</div>
       </div>`).join('');
-    document.getElementById('sms').innerHTML = html || '<div class="item">Ҳозирча маълумот йўқ</div>';
-  });
+    document.getElementById('sms').innerHTML = smsHtml || '<div class="item">Ҳозирча маълумот йўқ</div>';
+  } catch (e) {
+    document.getElementById('status').textContent = 'Хато: ' + e.message;
+  }
 }
 
-const saved = localStorage.getItem('kuzatuv_config');
-if (saved) {
-  try {
-    const cfg = JSON.parse(saved);
-    document.getElementById('apiKey').value = cfg.apiKey || '';
-    document.getElementById('authDomain').value = cfg.authDomain || '';
-    document.getElementById('databaseURL').value = cfg.databaseURL || '';
-    document.getElementById('projectId').value = cfg.projectId || '';
-    document.getElementById('appId').value = cfg.appId || '';
-    init(cfg);
-  } catch (e) {}
+function start(url) {
+  document.getElementById('setupBox').style.display = 'none';
+  refresh(url);
+  setInterval(() => refresh(url), 4000);
+}
+
+const savedUrl = localStorage.getItem('kuzatuv_db_url');
+if (savedUrl) {
+  document.getElementById('databaseURL').value = savedUrl;
+  start(savedUrl);
 }
 </script>
 </body>
