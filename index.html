@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="uz">
 <head>
@@ -13,7 +12,7 @@
   .setup button { padding: 8px 14px; border-radius: 6px; border: none; background: #0f6e56; color: #fff; }
   .item { background: #1b1b1b; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
   .item .top { display: flex; justify-content: space-between; font-size: 13px; color: #9ad; }
-  .item .body { margin-top: 4px; font-size: 15px; }
+  .item .body { margin-top: 4px; font-size: 15px; white-space: pre-wrap; word-break: break-word; }
   .missed { color: #e66; }
   .incoming { color: #6c6; }
   .outgoing { color: #69c; }
@@ -41,6 +40,12 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script>
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = String(s ?? '');
+  return d.innerHTML;
+}
+
 function saveConfigAndStart() {
   const cfg = {
     apiKey: document.getElementById('apiKey').value.trim(),
@@ -79,10 +84,10 @@ function init(cfg) {
     const html = rows.map(r => `
       <div class="item">
         <div class="top">
-          <span class="${r.type}">${typeLabel(r.type)}</span>
-          <span>${fmtDate(r.timestamp)}</span>
+          <span class="${esc(r.type)}">${esc(typeLabel(r.type))}</span>
+          <span>${esc(fmtDate(r.timestamp))}</span>
         </div>
-        <div class="body">${r.number} ${r.duration ? '· ' + r.duration + ' сония' : ''}</div>
+        <div class="body">${esc(r.number)} ${r.duration ? '· ' + esc(r.duration) + ' сония' : ''}</div>
       </div>`).join('');
     document.getElementById('calls').innerHTML = html || '<div class="item">Ҳозирча маълумот йўқ</div>';
   });
@@ -93,8 +98,8 @@ function init(cfg) {
     rows.sort((a, b) => b.timestamp - a.timestamp);
     const html = rows.map(r => `
       <div class="item">
-        <div class="top"><span>${r.sender}</span><span>${fmtDate(r.timestamp)}</span></div>
-        <div class="body">${r.body}</div>
+        <div class="top"><span>${esc(r.sender)}</span><span>${esc(fmtDate(r.timestamp))}</span></div>
+        <div class="body">${esc(r.body)}</div>
       </div>`).join('');
     document.getElementById('sms').innerHTML = html || '<div class="item">Ҳозирча маълумот йўқ</div>';
   });
