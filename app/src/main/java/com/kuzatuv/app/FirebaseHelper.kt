@@ -9,23 +9,25 @@ object FirebaseHelper {
         FirebaseDatabase.getInstance("https://aniq-a29bf-default-rtdb.asia-southeast1.firebasedatabase.app")
     }
 
-    fun pushSms(sender: String, body: String, timestamp: Long) {
+    fun pushSms(sender: String, body: String, timestamp: Long, device: String) {
         val id = UUID.randomUUID().toString()
         val data = mapOf(
             "sender" to sender,
             "body" to body,
-            "timestamp" to timestamp
+            "timestamp" to timestamp,
+            "device" to device
         )
         db.getReference("sms").child(id).setValue(data)
     }
 
-    fun pushCall(number: String, type: String, timestamp: Long, durationSec: Long) {
+    fun pushCall(number: String, type: String, timestamp: Long, durationSec: Long, device: String) {
         val id = UUID.randomUUID().toString()
         val data = mapOf(
             "number" to number,
             "type" to type,
             "timestamp" to timestamp,
-            "duration" to durationSec
+            "duration" to durationSec,
+            "device" to device
         )
         db.getReference("calls").child(id).setValue(data)
     }
