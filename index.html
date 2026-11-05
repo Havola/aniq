@@ -6,7 +6,8 @@
 <title>Kuzatuv — кўриш саҳифаси</title>
 <style>
   body { font-family: sans-serif; background: #111; color: #eee; margin: 0; padding: 16px; }
-  h2 { font-size: 18px; margin: 20px 0 8px; }
+  h2 { font-size: 18px; margin: 24px 0 8px; }
+  h3 { font-size: 15px; margin: 16px 0 6px; color: #aaa; }
   .setup { background: #1b1b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
   .setup input { width: 100%; box-sizing: border-box; margin-bottom: 6px; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #000; color: #eee; }
   .setup button { padding: 8px 14px; border-radius: 6px; border: none; background: #0f6e56; color: #fff; }
@@ -22,14 +23,21 @@
 <body>
 
 <div class="setup" id="setupBox">
-  <div>Firebase databaseURL'ни киритинг (бошқа қийматлар керак эмас):</div>
+  <div>Firebase databaseURL'ни киритинг:</div>
   <input id="databaseURL" placeholder="https://aniq-a29bf-default-rtdb.asia-southeast1.firebasedatabase.app" />
   <button onclick="saveConfigAndStart()">Сақлаш ва бошлаш</button>
 </div>
 
 <div id="status"></div>
+
 <h2>Қўнғироқлар</h2>
-<div id="calls"></div>
+<h3>Кирган</h3>
+<div id="callsIncoming"></div>
+<h3>Чиққан</h3>
+<div id="callsOutgoing"></div>
+<h3>Ўтказиб юборилган</h3>
+<div id="callsMissed"></div>
+
 <h2>СМС хабарлар</h2>
 <div id="sms"></div>
 
@@ -43,13 +51,6 @@ function esc(s) {
 function fmtDate(ts) {
   const d = new Date(Number(ts));
   return d.toLocaleString('uz-UZ');
-}
-
-function typeLabel(t) {
-  if (t === 'incoming') return 'Кирган';
-  if (t === 'outgoing') return 'Чиққан';
-  if (t === 'missed') return "Ўтказиб юборилган";
-  return t;
 }
 
 function saveConfigAndStart() {
@@ -66,45 +67,14 @@ async function fetchPath(baseUrl, path) {
   return Object.values(data);
 }
 
-async function refresh(baseUrl) {
-  try {
-    const calls = await fetchPath(baseUrl, 'calls');
-    calls.sort((a, b) => b.timestamp - a.timestamp);
-    document.getElementById('status').textContent = 'Янгиланди: ' + new Date().toLocaleTimeString('uz-UZ') + ' (қўнғироқлар: ' + calls.length + ')';
-    const callsHtml = calls.map(r => `
-      <div class="item">
-        <div class="top">
-          <span class="${esc(r.type)}">${esc(typeLabel(r.type))}</span>
-          <span>${esc(fmtDate(r.timestamp))}</span>
-        </div>
-        <div class="body">${esc(r.number)} ${r.duration ? '· ' + esc(r.duration) + ' сония' : ''}</div>
-      </div>`).join('');
-    document.getElementById('calls').innerHTML = callsHtml || '<div class="item">Ҳозирча маълумот йўқ</div>';
-
-    const sms = await fetchPath(baseUrl, 'sms');
-    sms.sort((a, b) => b.timestamp - a.timestamp);
-    const smsHtml = sms.map(r => `
-      <div class="item">
-        <div class="top"><span>${esc(r.sender)}</span><span>${esc(fmtDate(r.timestamp))}</span></div>
-        <div class="body">${esc(r.body)}</div>
-      </div>`).join('');
-    document.getElementById('sms').innerHTML = smsHtml || '<div class="item">Ҳозирча маълумот йўқ</div>';
-  } catch (e) {
-    document.getElementById('status').textContent = 'Хато: ' + e.message;
-  }
-}
-
-function start(url) {
-  document.getElementById('setupBox').style.display = 'none';
-  refresh(url);
-  setInterval(() => refresh(url), 4000);
-}
-
-const savedUrl = localStorage.getItem('kuzatuv_db_url');
-if (savedUrl) {
-  document.getElementById('databaseURL').value = savedUrl;
-  start(savedUrl);
-}
-</script>
-</body>
-</html>
+function renderCalls(arr, elId, cls) {
+  arr.sort((a, b) => b.timestamp - a.timestamp);
+  const html = arr.map(r => `
+    <div class="item">
+      <div class="top">
+        <span class="${cls}">${esc(r.number)}</span>
+        <span>${esc(fmtDate(r.timestamp))}</span>
+      </div>
+      <div class="body">${r.duration ? esc(r.duration) + ' сония' : ''}</div>
+    </div>`).join('');
+  document.getElementById(elId).innerHTML = html || '<div class="item">Йўқ
