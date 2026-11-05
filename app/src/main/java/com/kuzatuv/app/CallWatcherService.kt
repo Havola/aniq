@@ -40,7 +40,8 @@ class CallWatcherService : Service() {
                         else -> null
                     }
                     if (type != null) {
-                        FirebaseHelper.pushCall(lastNumber, type, callStartTime, durationSec)
+                        val device = DevicePrefs.getDeviceName(applicationContext)
+                        FirebaseHelper.pushCall(lastNumber, type, callStartTime, durationSec, device)
                     }
                     wasRinging = false
                     wasOffHook = false
