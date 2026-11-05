@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "496609093907",
+    "firebase_url": "https://aniq-a29bf-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "aniq-a29bf",
+    "storage_bucket": "aniq-a29bf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:496609093907:android:454c43610dd185cfa4d2e6",
+        "android_client_info": {
+          "package_name": "com.kuzatuv.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgwEHjaCEFPvujKtHOTHdiqcekH5XV7-w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
