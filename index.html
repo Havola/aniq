@@ -43,72 +43,78 @@
 
 <script>
 function esc(s) {
-  const d = document.createElement('div');
-  d.textContent = String(s ?? '');
+  var d = document.createElement('div');
+  d.textContent = String(s == null ? '' : s);
   return d.innerHTML;
 }
 
 function fmtDate(ts) {
-  const d = new Date(Number(ts));
+  var d = new Date(Number(ts));
   return d.toLocaleString('uz-UZ');
 }
 
 function saveConfigAndStart() {
-  const url = document.getElementById('databaseURL').value.trim();
+  var url = document.getElementById('databaseURL').value.trim();
   localStorage.setItem('kuzatuv_db_url', url);
   start(url);
 }
 
-async function fetchPath(baseUrl, path) {
-  const res = await fetch(baseUrl.replace(/\/$/, '') + '/' + path + '.json?ts=' + Date.now());
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  const data = await res.json();
-  if (!data) return [];
-  return Object.values(data);
+function fetchPath(baseUrl, path) {
+  var full = baseUrl.replace(/\/$/, '') + '/' + path + '.json?ts=' + Date.now();
+  return fetch(full).then(function (res) {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }).then(function (data) {
+    if (!data) return [];
+    return Object.values(data);
+  });
 }
 
 function renderCalls(arr, elId, cls) {
-  arr.sort((a, b) => b.timestamp - a.timestamp);
-  const html = arr.map(r => `
-    <div class="item">
-      <div class="top">
-        <span class="${cls}">${esc(r.number)}</span>
-        <span>${esc(fmtDate(r.timestamp))}</span>
-      </div>
-      <div class="body">${r.duration ? esc(r.duration) + ' сония' : ''}</div>
-    </div>`).join('');
+  arr.sort(function (a, b) { return b.timestamp - a.timestamp; });
+  var html = arr.map(function (r) {
+    return '<div class="item">' +
+      '<div class="top">' +
+        '<span class="' + cls + '">' + esc(r.number) + '</span>' +
+        '<span>' + esc(fmtDate(r.timestamp)) + '</span>' +
+      '</div>' +
+      '<div class="body">' + (r.duration ? esc(r.duration) + ' сония' : '') + '</div>' +
+    '</div>';
+  }).join('');
   document.getElementById(elId).innerHTML = html || '<div class="item">Йўқ</div>';
 }
 
-async function refresh(baseUrl) {
-  try {
-    const calls = await fetchPath(baseUrl, 'calls');
-    renderCalls(calls.filter(c => c.type === 'incoming'), 'callsIncoming', 'incoming');
-    renderCalls(calls.filter(c => c.type === 'outgoing'), 'callsOutgoing', 'outgoing');
-    renderCalls(calls.filter(c => c.type === 'missed'), 'callsMissed', 'missed');
+function refresh(baseUrl) {
+  fetchPath(baseUrl, 'calls').then(function (calls) {
+    renderCalls(calls.filter(function (c) { return c.type === 'incoming'; }), 'callsIncoming', 'incoming');
+    renderCalls(calls.filter(function (c) { return c.type === 'outgoing'; }), 'callsOutgoing', 'outgoing');
+    renderCalls(calls.filter(function (c) { return c.type === 'missed'; }), 'callsMissed', 'missed');
+  }).catch(function (e) {
+    document.getElementById('status').textContent = 'Хато (calls): ' + e.message;
+  });
 
-    const sms = await fetchPath(baseUrl, 'sms');
-    sms.sort((a, b) => b.timestamp - a.timestamp);
-    const smsHtml = sms.map(r => `
-      <div class="item">
-        <div class="top"><span>${esc(r.sender)}</span><span>${esc(fmtDate(r.timestamp))}</span></div>
-        <div class="body">${esc(r.body)}</div>
-      </div>`).join('');
-    document.getElementById('sms').innerHTML = smsHtml || '<div class="item">Ҳозирча маълумот йўқ</div>';
-
+  fetchPath(baseUrl, 'sms').then(function (sms) {
+    sms.sort(function (a, b) { return b.timestamp - a.timestamp; });
+    var html = sms.map(function (r) {
+      return '<div class="item">' +
+        '<div class="top"><span>' + esc(r.sender) + '</span><span>' + esc(fmtDate(r.timestamp)) + '</span></div>' +
+        '<div class="body">' + esc(r.body) + '</div>' +
+      '</div>';
+    }).join('');
+    document.getElementById('sms').innerHTML = html || '<div class="item">Ҳозирча маълумот йўқ</div>';
     document.getElementById('status').textContent = 'Янгиланди: ' + new Date().toLocaleTimeString('uz-UZ');
-  } catch (e) {
-    document.getElementById('status').textContent = 'Хато: ' + e.message;
-  }
+  }).catch(function (e) {
+    document.getElementById('status').textContent = 'Хато (sms): ' + e.message;
+  });
 }
 
 function start(url) {
   document.getElementById('setupBox').style.display = 'none';
   refresh(url);
-  setInterval(() => refresh(url), 4000);
+  setInterval(function () { refresh(url); }, 4000);
 }
 
-const savedUrl = localStorage.getItem('kuzatuv_db_url');
+var savedUrl = localStorage.getItem('kuzatuv_db_url');
 if (savedUrl) {
   document.getElementById('databaseURL').value = savedUrl;
   start(savedUrl);
