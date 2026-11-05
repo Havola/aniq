@@ -14,6 +14,7 @@
   .item { background: #1b1b1b; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
   .item .top { display: flex; justify-content: space-between; font-size: 13px; color: #9ad; }
   .item .body { margin-top: 4px; font-size: 15px; white-space: pre-wrap; word-break: break-word; }
+  .item .dev { font-size: 11px; color: #777; margin-top: 2px; }
   .missed { color: #e66; }
   .incoming { color: #6c6; }
   .outgoing { color: #69c; }
@@ -23,6 +24,7 @@
   .tabs button.active { background: #0f6e56; color: #fff; border-color: #0f6e56; }
   .page { display: none; }
   .page.active { display: block; }
+  #deviceFilter { width: 100%; box-sizing: border-box; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #000; color: #eee; margin-bottom: 12px; }
 </style>
 </head>
 <body>
@@ -37,6 +39,10 @@
   <button id="tabBtnCalls" class="active" onclick="showTab('calls')">Қўнғироқлар</button>
   <button id="tabBtnSms" onclick="showTab('sms')">СМС</button>
 </div>
+
+<select id="deviceFilter" onchange="applyFilterAndRender()">
+  <option value="">Барча телефонлар</option>
+</select>
 
 <div id="status"></div>
 
@@ -54,6 +60,9 @@
 </div>
 
 <script>
+var allCalls = [];
+var allSms = [];
+
 function esc(s) {
   var d = document.createElement('div');
   d.textContent = String(s == null ? '' : s);
@@ -89,6 +98,21 @@ function fetchPath(baseUrl, path) {
   });
 }
 
+function updateDeviceOptions() {
+  var names = {};
+  allCalls.concat(allSms).forEach(function (r) {
+    if (r.device) names[r.device] = true;
+  });
+  var select = document.getElementById('deviceFilter');
+  var current = select.value;
+  var html = '<option value="">Барча телефонлар</option>';
+  Object.keys(names).sort().forEach(function (n) {
+    html += '<option value="' + esc(n) + '">' + esc(n) + '</option>';
+  });
+  select.innerHTML = html;
+  select.value = current;
+}
+
 function renderCalls(arr, elId, cls) {
   arr.sort(function (a, b) { return b.timestamp - a.timestamp; });
   var html = arr.map(function (r) {
@@ -98,29 +122,45 @@ function renderCalls(arr, elId, cls) {
         '<span>' + esc(fmtDate(r.timestamp)) + '</span>' +
       '</div>' +
       '<div class="body">' + (r.duration ? esc(r.duration) + ' сония' : '') + '</div>' +
+      (r.device ? '<div class="dev">' + esc(r.device) + '</div>' : '') +
     '</div>';
   }).join('');
   document.getElementById(elId).innerHTML = html || '<div class="item">Йўқ</div>';
 }
 
+function applyFilterAndRender() {
+  var dev = document.getElementById('deviceFilter').value;
+  var calls = dev ? allCalls.filter(function (c) { return c.device === dev; }) : allCalls;
+  var sms = dev ? allSms.filter(function (s) { return s.device === dev; }) : allSms;
+
+  renderCalls(calls.filter(function (c) { return c.type === 'incoming'; }), 'callsIncoming', 'incoming');
+  renderCalls(calls.filter(function (c) { return c.type === 'outgoing'; }), 'callsOutgoing', 'outgoing');
+  renderCalls(calls.filter(function (c) { return c.type === 'missed'; }), 'callsMissed', 'missed');
+
+  sms.sort(function (a, b) { return b.timestamp - a.timestamp; });
+  var html = sms.map(function (r) {
+    return '<div class="item">' +
+      '<div class="top"><span>' + esc(r.sender) + '</span><span>' + esc(fmtDate(r.timestamp)) + '</span></div>' +
+      '<div class="body">' + esc(r.body) + '</div>' +
+      (r.device ? '<div class="dev">' + esc(r.device) + '</div>' : '') +
+    '</div>';
+  }).join('');
+  document.getElementById('sms').innerHTML = html || '<div class="item">Ҳозирча маълумот йўқ</div>';
+}
+
 function refresh(baseUrl) {
   fetchPath(baseUrl, 'calls').then(function (calls) {
-    renderCalls(calls.filter(function (c) { return c.type === 'incoming'; }), 'callsIncoming', 'incoming');
-    renderCalls(calls.filter(function (c) { return c.type === 'outgoing'; }), 'callsOutgoing', 'outgoing');
-    renderCalls(calls.filter(function (c) { return c.type === 'missed'; }), 'callsMissed', 'missed');
+    allCalls = calls;
+    updateDeviceOptions();
+    applyFilterAndRender();
   }).catch(function (e) {
     document.getElementById('status').textContent = 'Хато (calls): ' + e.message;
   });
 
   fetchPath(baseUrl, 'sms').then(function (sms) {
-    sms.sort(function (a, b) { return b.timestamp - a.timestamp; });
-    var html = sms.map(function (r) {
-      return '<div class="item">' +
-        '<div class="top"><span>' + esc(r.sender) + '</span><span>' + esc(fmtDate(r.timestamp)) + '</span></div>' +
-        '<div class="body">' + esc(r.body) + '</div>' +
-      '</div>';
-    }).join('');
-    document.getElementById('sms').innerHTML = html || '<div class="item">Ҳозирча маълумот йўқ</div>';
+    allSms = sms;
+    updateDeviceOptions();
+    applyFilterAndRender();
     document.getElementById('status').textContent = 'Янгиланди: ' + new Date().toLocaleTimeString('uz-UZ');
   }).catch(function (e) {
     document.getElementById('status').textContent = 'Хато (sms): ' + e.message;
