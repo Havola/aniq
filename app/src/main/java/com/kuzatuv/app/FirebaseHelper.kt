@@ -5,7 +5,9 @@ import java.util.UUID
 
 object FirebaseHelper {
 
-    private val db by lazy { FirebaseDatabase.getInstance() }
+    private val db by lazy {
+        FirebaseDatabase.getInstance("https://aniq-a29bf-default-rtdb.asia-southeast1.firebasedatabase.app")
+    }
 
     fun pushSms(sender: String, body: String, timestamp: Long) {
         val id = UUID.randomUUID().toString()
