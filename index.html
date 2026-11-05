@@ -17,7 +17,12 @@
   .missed { color: #e66; }
   .incoming { color: #6c6; }
   .outgoing { color: #69c; }
-  #status { font-size: 13px; color: #888; margin-bottom: 10px; }
+  #status { font-size: 13px; color: #888; margin: 10px 0; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+  .tabs button { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #444; background: #1b1b1b; color: #888; font-size: 15px; }
+  .tabs button.active { background: #0f6e56; color: #fff; border-color: #0f6e56; }
+  .page { display: none; }
+  .page.active { display: block; }
 </style>
 </head>
 <body>
@@ -28,18 +33,25 @@
   <button onclick="saveConfigAndStart()">Сақлаш ва бошлаш</button>
 </div>
 
+<div class="tabs">
+  <button id="tabBtnCalls" class="active" onclick="showTab('calls')">Қўнғироқлар</button>
+  <button id="tabBtnSms" onclick="showTab('sms')">СМС</button>
+</div>
+
 <div id="status"></div>
 
-<h2>Қўнғироқлар</h2>
-<h3>Кирган</h3>
-<div id="callsIncoming"></div>
-<h3>Чиққан</h3>
-<div id="callsOutgoing"></div>
-<h3>Ўтказиб юборилган</h3>
-<div id="callsMissed"></div>
+<div id="pageCalls" class="page active">
+  <h3>Кирган</h3>
+  <div id="callsIncoming"></div>
+  <h3>Чиққан</h3>
+  <div id="callsOutgoing"></div>
+  <h3>Ўтказиб юборилган</h3>
+  <div id="callsMissed"></div>
+</div>
 
-<h2>СМС хабарлар</h2>
-<div id="sms"></div>
+<div id="pageSms" class="page">
+  <div id="sms"></div>
+</div>
 
 <script>
 function esc(s) {
@@ -51,6 +63,13 @@ function esc(s) {
 function fmtDate(ts) {
   var d = new Date(Number(ts));
   return d.toLocaleString('uz-UZ');
+}
+
+function showTab(name) {
+  document.getElementById('pageCalls').classList.toggle('active', name === 'calls');
+  document.getElementById('pageSms').classList.toggle('active', name === 'sms');
+  document.getElementById('tabBtnCalls').classList.toggle('active', name === 'calls');
+  document.getElementById('tabBtnSms').classList.toggle('active', name === 'sms');
 }
 
 function saveConfigAndStart() {
