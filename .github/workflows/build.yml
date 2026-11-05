@@ -1,0 +1,28 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repозиторийни олиш
+        uses: actions/checkout@v4
+
+      - name: Java ўрнатиш
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Debug APK йиғиш
+        run: gradle assembleDebug
+
+      - name: APK'ни сақлаш
+        uses: actions/upload-artifact@v4
+        with:
+          name: kuzatuv-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
