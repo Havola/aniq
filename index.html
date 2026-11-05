@@ -1,1 +1,117 @@
 
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kuzatuv — кўриш саҳифаси</title>
+<style>
+  body { font-family: sans-serif; background: #111; color: #eee; margin: 0; padding: 16px; }
+  h2 { font-size: 18px; margin: 20px 0 8px; }
+  .setup { background: #1b1b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+  .setup input { width: 100%; box-sizing: border-box; margin-bottom: 6px; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #000; color: #eee; }
+  .setup button { padding: 8px 14px; border-radius: 6px; border: none; background: #0f6e56; color: #fff; }
+  .item { background: #1b1b1b; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+  .item .top { display: flex; justify-content: space-between; font-size: 13px; color: #9ad; }
+  .item .body { margin-top: 4px; font-size: 15px; }
+  .missed { color: #e66; }
+  .incoming { color: #6c6; }
+  .outgoing { color: #69c; }
+  #status { font-size: 13px; color: #888; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<div class="setup" id="setupBox">
+  <div>Firebase созламалари (Firebase консолидан "Project settings → Config" дан олинади):</div>
+  <input id="apiKey" placeholder="apiKey" />
+  <input id="authDomain" placeholder="authDomain" />
+  <input id="databaseURL" placeholder="databaseURL" />
+  <input id="projectId" placeholder="projectId" />
+  <input id="appId" placeholder="appId" />
+  <button onclick="saveConfigAndStart()">Сақлаш ва бошлаш</button>
+</div>
+
+<div id="status"></div>
+<h2>Қўнғироқлар</h2>
+<div id="calls"></div>
+<h2>СМС хабарлар</h2>
+<div id="sms"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script>
+function saveConfigAndStart() {
+  const cfg = {
+    apiKey: document.getElementById('apiKey').value.trim(),
+    authDomain: document.getElementById('authDomain').value.trim(),
+    databaseURL: document.getElementById('databaseURL').value.trim(),
+    projectId: document.getElementById('projectId').value.trim(),
+    appId: document.getElementById('appId').value.trim(),
+  };
+  localStorage.setItem('kuzatuv_config', JSON.stringify(cfg));
+  init(cfg);
+}
+
+function fmtDate(ts) {
+  const d = new Date(Number(ts));
+  return d.toLocaleString('uz-UZ');
+}
+
+function typeLabel(t) {
+  if (t === 'incoming') return 'Кирган';
+  if (t === 'outgoing') return 'Чиққан';
+  if (t === 'missed') return "Ўтказиб юборилган";
+  return t;
+}
+
+function init(cfg) {
+  document.getElementById('setupBox').style.display = 'none';
+  document.getElementById('status').textContent = 'Уланди. Маълумот реал вақтда кўрсатилади.';
+
+  firebase.initializeApp(cfg);
+  const db = firebase.database();
+
+  db.ref('calls').limitToLast(100).on('value', (snap) => {
+    const rows = [];
+    snap.forEach((child) => rows.push(child.val()));
+    rows.sort((a, b) => b.timestamp - a.timestamp);
+    const html = rows.map(r => `
+      <div class="item">
+        <div class="top">
+          <span class="${r.type}">${typeLabel(r.type)}</span>
+          <span>${fmtDate(r.timestamp)}</span>
+        </div>
+        <div class="body">${r.number} ${r.duration ? '· ' + r.duration + ' сония' : ''}</div>
+      </div>`).join('');
+    document.getElementById('calls').innerHTML = html || '<div class="item">Ҳозирча маълумот йўқ</div>';
+  });
+
+  db.ref('sms').limitToLast(100).on('value', (snap) => {
+    const rows = [];
+    snap.forEach((child) => rows.push(child.val()));
+    rows.sort((a, b) => b.timestamp - a.timestamp);
+    const html = rows.map(r => `
+      <div class="item">
+        <div class="top"><span>${r.sender}</span><span>${fmtDate(r.timestamp)}</span></div>
+        <div class="body">${r.body}</div>
+      </div>`).join('');
+    document.getElementById('sms').innerHTML = html || '<div class="item">Ҳозирча маълумот йўқ</div>';
+  });
+}
+
+const saved = localStorage.getItem('kuzatuv_config');
+if (saved) {
+  try {
+    const cfg = JSON.parse(saved);
+    document.getElementById('apiKey').value = cfg.apiKey || '';
+    document.getElementById('authDomain').value = cfg.authDomain || '';
+    document.getElementById('databaseURL').value = cfg.databaseURL || '';
+    document.getElementById('projectId').value = cfg.projectId || '';
+    document.getElementById('appId').value = cfg.appId || '';
+    init(cfg);
+  } catch (e) {}
+}
+</script>
+</body>
+</html>
