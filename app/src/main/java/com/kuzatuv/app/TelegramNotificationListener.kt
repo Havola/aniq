@@ -11,7 +11,9 @@ class TelegramNotificationListener : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val pkg = sbn.packageName
-                
+        val pkgLower = pkg.lowercase()
+        val isTelegramLike = pkgLower.contains("telegra") || pkgLower.contains("legram") || pkgLower.contains("nekogram") || pkgLower.contains("nekox")
+        if (!isTelegramLike) return
 
         val extras = sbn.notification.extras
         val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: ""
