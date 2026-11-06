@@ -50,6 +50,13 @@
             android:name=".CallWatcherService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
-
+       <service
+            android:name=".TelegramNotificationListener"
+            android:exported="false"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>
