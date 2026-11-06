@@ -15,7 +15,7 @@
 
     <application
         android:allowBackup="false"
-        android:label="Kuzatuv"
+        android:label="aniq"
         android:icon="@mipmap/ic_launcher"
         android:theme="@style/Theme.Kuzatuv"
         android:usesCleartextTraffic="false">
