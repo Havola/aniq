@@ -38,6 +38,13 @@
         android:id="@+id/btnSyncHistory"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Тарихни юбориш" />
+        android:text="Тарихни юбориш"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btnNotificationAccess"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Telegram рухсатини очиш" />
 
 </LinearLayout>
