@@ -9,7 +9,7 @@ class TelegramNotificationListener : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val pkg = sbn.packageName
-        if (!pkg.contains("telegram", ignoreCase = true)) return
+        
 
         val extras = sbn.notification.extras
         val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: ""
