@@ -31,7 +31,10 @@ class TelegramNotificationListener : NotificationListenerService() {
             if (!msgText.isNullOrEmpty()) text = msgText
         }
 
-                if (title.isEmpty() && text.isEmpty()) return
+                        if (title.isEmpty() && text.isEmpty()) return
+        if (title.contains("aniq_bot", ignoreCase = true)) return
+        if (title.equals("Telegraph", ignoreCase = true)) return
+        if (text.startsWith("📨")) return
         if (title.contains("aniq_bot", ignoreCase = true)) return
         if (text.startsWith("📨")) return
 
