@@ -7,7 +7,6 @@
 <style>
   body { font-family: sans-serif; background: #111; color: #eee; margin: 0; padding: 16px; }
   h2 { font-size: 18px; margin: 24px 0 8px; }
-  h3 { font-size: 15px; margin: 16px 0 6px; color: #aaa; }
   .setup { background: #1b1b1b; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
   .setup input { width: 100%; box-sizing: border-box; margin-bottom: 6px; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #000; color: #eee; }
   .setup button { padding: 8px 14px; border-radius: 6px; border: none; background: #0f6e56; color: #fff; }
@@ -19,8 +18,8 @@
   .incoming { color: #6c6; }
   .outgoing { color: #69c; }
   #status { font-size: 13px; color: #888; margin: 10px 0; }
-  .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
-  .tabs button { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #444; background: #1b1b1b; color: #888; font-size: 15px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .tabs button { flex: 1; min-width: 70px; padding: 10px 4px; border-radius: 8px; border: 1px solid #444; background: #1b1b1b; color: #888; font-size: 13px; }
   .tabs button.active { background: #0f6e56; color: #fff; border-color: #0f6e56; }
   .page { display: none; }
   .page.active { display: block; }
@@ -36,7 +35,9 @@
 </div>
 
 <div class="tabs">
-  <button id="tabBtnCalls" class="active" onclick="showTab('calls')">Қўнғироқлар</button>
+  <button id="tabBtnIncoming" class="active" onclick="showTab('incoming')">Кирган</button>
+  <button id="tabBtnOutgoing" onclick="showTab('outgoing')">Чиққан</button>
+  <button id="tabBtnMissed" onclick="showTab('missed')">Ўтказиб юб.</button>
   <button id="tabBtnSms" onclick="showTab('sms')">СМС</button>
 </div>
 
@@ -46,15 +47,15 @@
 
 <div id="status"></div>
 
-<div id="pageCalls" class="page active">
-  <h3>Кирган</h3>
+<div id="pageIncoming" class="page active">
   <div id="callsIncoming"></div>
-  <h3>Чиққан</h3>
+</div>
+<div id="pageOutgoing" class="page">
   <div id="callsOutgoing"></div>
-  <h3>Ўтказиб юборилган</h3>
+</div>
+<div id="pageMissed" class="page">
   <div id="callsMissed"></div>
 </div>
-
 <div id="pageSms" class="page">
   <div id="sms"></div>
 </div>
@@ -75,10 +76,10 @@ function fmtDate(ts) {
 }
 
 function showTab(name) {
-  document.getElementById('pageCalls').classList.toggle('active', name === 'calls');
-  document.getElementById('pageSms').classList.toggle('active', name === 'sms');
-  document.getElementById('tabBtnCalls').classList.toggle('active', name === 'calls');
-  document.getElementById('tabBtnSms').classList.toggle('active', name === 'sms');
+  ['incoming', 'outgoing', 'missed', 'sms'].forEach(function (n) {
+    document.getElementById('page' + n.charAt(0).toUpperCase() + n.slice(1)).classList.toggle('active', n === name);
+    document.getElementById('tabBtn' + n.charAt(0).toUpperCase() + n.slice(1)).classList.toggle('active', n === name);
+  });
 }
 
 function saveConfigAndStart() {
