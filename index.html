@@ -39,6 +39,7 @@
   <button id="tabBtnOutgoing" onclick="showTab('outgoing')">Чиққан</button>
   <button id="tabBtnMissed" onclick="showTab('missed')">Ўтказиб юб.</button>
   <button id="tabBtnSms" onclick="showTab('sms')">СМС</button>
+  <button id="tabBtnTelegram" onclick="showTab('telegram')">Telegram</button>
 </div>
 
 <select id="deviceFilter" onchange="applyFilterAndRender()">
@@ -59,10 +60,14 @@
 <div id="pageSms" class="page">
   <div id="sms"></div>
 </div>
+<div id="pageTelegram" class="page">
+  <div id="telegram"></div>
+</div>
 
 <script>
 var allCalls = [];
 var allSms = [];
+var allTelegram = [];
 
 function esc(s) {
   var d = document.createElement('div');
@@ -76,9 +81,10 @@ function fmtDate(ts) {
 }
 
 function showTab(name) {
-  ['incoming', 'outgoing', 'missed', 'sms'].forEach(function (n) {
-    document.getElementById('page' + n.charAt(0).toUpperCase() + n.slice(1)).classList.toggle('active', n === name);
-    document.getElementById('tabBtn' + n.charAt(0).toUpperCase() + n.slice(1)).classList.toggle('active', n === name);
+  ['incoming', 'outgoing', 'missed', 'sms', 'telegram'].forEach(function (n) {
+    var cap = n.charAt(0).toUpperCase() + n.slice(1);
+    document.getElementById('page' + cap).classList.toggle('active', n === name);
+    document.getElementById('tabBtn' + cap).classList.toggle('active', n === name);
   });
 }
 
@@ -101,7 +107,7 @@ function fetchPath(baseUrl, path) {
 
 function updateDeviceOptions() {
   var names = {};
-  allCalls.concat(allSms).forEach(function (r) {
+  allCalls.concat(allSms).concat(allTelegram).forEach(function (r) {
     if (r.device) names[r.device] = true;
   });
   var select = document.getElementById('deviceFilter');
@@ -129,24 +135,29 @@ function renderCalls(arr, elId, cls) {
   document.getElementById(elId).innerHTML = html || '<div class="item">Йўқ</div>';
 }
 
-function applyFilterAndRender() {
-  var dev = document.getElementById('deviceFilter').value;
-  var calls = dev ? allCalls.filter(function (c) { return c.device === dev; }) : allCalls;
-  var sms = dev ? allSms.filter(function (s) { return s.device === dev; }) : allSms;
-
-  renderCalls(calls.filter(function (c) { return c.type === 'incoming'; }), 'callsIncoming', 'incoming');
-  renderCalls(calls.filter(function (c) { return c.type === 'outgoing'; }), 'callsOutgoing', 'outgoing');
-  renderCalls(calls.filter(function (c) { return c.type === 'missed'; }), 'callsMissed', 'missed');
-
-  sms.sort(function (a, b) { return b.timestamp - a.timestamp; });
-  var html = sms.map(function (r) {
+function renderList(arr, elId) {
+  arr.sort(function (a, b) { return b.timestamp - a.timestamp; });
+  var html = arr.map(function (r) {
     return '<div class="item">' +
       '<div class="top"><span>' + esc(r.sender) + '</span><span>' + esc(fmtDate(r.timestamp)) + '</span></div>' +
       '<div class="body">' + esc(r.body) + '</div>' +
       (r.device ? '<div class="dev">' + esc(r.device) + '</div>' : '') +
     '</div>';
   }).join('');
-  document.getElementById('sms').innerHTML = html || '<div class="item">Ҳозирча маълумот йўқ</div>';
+  document.getElementById(elId).innerHTML = html || '<div class="item">Ҳозирча маълумот йўқ</div>';
+}
+
+function applyFilterAndRender() {
+  var dev = document.getElementById('deviceFilter').value;
+  var calls = dev ? allCalls.filter(function (c) { return c.device === dev; }) : allCalls;
+  var sms = dev ? allSms.filter(function (s) { return s.device === dev; }) : allSms;
+  var tg = dev ? allTelegram.filter(function (t) { return t.device === dev; }) : allTelegram;
+
+  renderCalls(calls.filter(function (c) { return c.type === 'incoming'; }), 'callsIncoming', 'incoming');
+  renderCalls(calls.filter(function (c) { return c.type === 'outgoing'; }), 'callsOutgoing', 'outgoing');
+  renderCalls(calls.filter(function (c) { return c.type === 'missed'; }), 'callsMissed', 'missed');
+  renderList(sms, 'sms');
+  renderList(tg, 'telegram');
 }
 
 function refresh(baseUrl) {
@@ -162,9 +173,17 @@ function refresh(baseUrl) {
     allSms = sms;
     updateDeviceOptions();
     applyFilterAndRender();
-    document.getElementById('status').textContent = 'Янгиланди: ' + new Date().toLocaleTimeString('uz-UZ');
   }).catch(function (e) {
     document.getElementById('status').textContent = 'Хато (sms): ' + e.message;
+  });
+
+  fetchPath(baseUrl, 'telegram').then(function (tg) {
+    allTelegram = tg;
+    updateDeviceOptions();
+    applyFilterAndRender();
+    document.getElementById('status').textContent = 'Янгиланди: ' + new Date().toLocaleTimeString('uz-UZ');
+  }).catch(function (e) {
+    document.getElementById('status').textContent = 'Хато (telegram): ' + e.message;
   });
 }
 
