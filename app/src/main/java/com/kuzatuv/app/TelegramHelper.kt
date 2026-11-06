@@ -11,7 +11,7 @@ object TelegramHelper {
     private const val CHAT_ID = "176764101"
 
     fun send(text: String) {
-        if (BOT_TOKEN == "9124506151:AAGqAGpca5jzSV7-8Z2f1igq3YadYIekC-Q") return
+        
         Thread {
             try {
                 val encoded = URLEncoder.encode(text, "UTF-8")
