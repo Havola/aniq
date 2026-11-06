@@ -32,14 +32,14 @@ object FirebaseHelper {
         db.getReference("calls").child(id).setValue(data)
     }
 
-    fun pushTelegram(sender: String, body: String, timestamp: Long, device: String) {
-        val id = UUID.randomUUID().toString()
+        fun pushTelegram(key: String, sender: String, body: String, timestamp: Long, device: String) {
+        val safeKey = key.replace(Regex("[.#$\\[\\]/]"), "_")
         val data = mapOf(
             "sender" to sender,
             "body" to body,
             "timestamp" to timestamp,
             "device" to device
         )
-        db.getReference("telegram").child(id).setValue(data)
+        db.getReference("telegram").child(safeKey).setValue(data)
     }
 }
