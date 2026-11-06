@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.CallLog
+import android.provider.Settings
 import android.provider.Telephony
 import android.widget.Button
 import android.widget.EditText
@@ -40,6 +41,7 @@ class MainActivity : AppCompatActivity() {
         val btnSaveDeviceName = findViewById<Button>(R.id.btnSaveDeviceName)
         val btnPermission = findViewById<Button>(R.id.btnPermission)
         val btnSyncHistory = findViewById<Button>(R.id.btnSyncHistory)
+        val btnNotificationAccess = findViewById<Button>(R.id.btnNotificationAccess)
 
         deviceNameInput.setText(DevicePrefs.getDeviceName(this))
         updateStatus()
@@ -64,6 +66,10 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Аввал рухсат беринг", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        btnNotificationAccess.setOnClickListener {
+            startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
         }
     }
 
